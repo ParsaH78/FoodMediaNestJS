@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique
+  password String
+  username String @unique
+  firstname String?
+  lastname String?
+  profilepicture String?
+  coverpicture String?
+  desc String?
+  country String?
+  city String?
+  relationship String?
+  favorites String[] 
+  followers String[] 
+  followings String[] 
+  posts Post[]
+  comments Comment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  name String
+  explain String?
+  desc String[] 
+  images String[] 
+  likes String[]
+  readytime Int
+  ingredients Json
+  category String[] 
+  vegan String @default("نیست")
+  rating Json[]
+  score Int @default(0)
+  people Int @default(1)
+  comments Comment[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Comment {
+  id String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  postId String @db.Uuid
+  text String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  post Post @relation(fields: [postId], references: [id])
+}
+
+model Conversation {
+  id String @id @default(uuid()) @db.Uuid
+  members String[]
+  messages Message[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id String @id @default(uuid())  @db.Uuid
+  conversationId String @db.Uuid
+  sender String
+  text String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+
+}
