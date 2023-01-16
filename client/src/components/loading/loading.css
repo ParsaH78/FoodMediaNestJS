@@ -1,0 +1,13 @@
+.loadingBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    margin-top: 25%;
+}
+
+.loadingText {
+    color: #d94f55;
+    margin-top: 40px;
+    font-size: 25px;
+}
