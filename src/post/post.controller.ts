@@ -40,8 +40,8 @@ export class PostController {
     return this.postService.getPost(postId);
   }
 
-  @Get('userpost')
-  getUsersPost(@Body() id: string) {
+  @Get('userposts/:id')
+  getUsersPost(@Param('id') id: string) {
     return this.postService.getUsersPost(id);
   }
 

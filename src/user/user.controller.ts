@@ -1,6 +1,14 @@
 import { userFavoritesDto } from './dto/user.dto';
 import { UserService } from './user.service';
-import { Controller, Get, Put, Delete, UseGuards, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Delete,
+  UseGuards,
+  Body,
+  UseFilters,
+} from '@nestjs/common';
 import { JWTGuard } from 'src/auth/guards';
 import { GetUser } from 'src/auth/decorator';
 import { User } from '@prisma/client';
@@ -39,6 +47,6 @@ export class UserController {
     @GetUser('id') userId: string,
     @Body() data: { targetId: string },
   ) {
-    return this.userService.followUser(userId, data['targetId']);
+    return this.userService.followingStuff(userId, data['targetId']);
   }
 }

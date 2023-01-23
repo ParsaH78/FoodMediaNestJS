@@ -1,43 +1,40 @@
-import { IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString } from 'class-validator';
 
 export class updateUserDto {
-  
-    @IsString()
-    @IsOptional()
-    firstname?: string;
-  
-    @IsString()
-    @IsOptional()
-    lastname?: string;
+  @IsString()
+  @IsOptional()
+  firstname?: string;
 
-    @IsString()
-    @IsOptional()
-    profilePicture?: string;
+  @IsString()
+  @IsOptional()
+  lastname?: string;
 
-    @IsString()
-    @IsOptional()
-    coverPicture?: string;
+  @IsString()
+  @IsOptional()
+  profilePicture?: string;
 
-    @IsString()
-    @IsOptional()
-    desc?: string;
+  @IsString()
+  @IsOptional()
+  coverPicture?: string;
 
-    @IsString()
-    @IsOptional()
-    country?: string;
+  @IsString()
+  @IsOptional()
+  desc?: string;
 
-    @IsString()
-    @IsOptional()
-    city?: string;
+  @IsString()
+  @IsOptional()
+  country?: string;
 
-    @IsString()
-    @IsOptional()
-    relationship?: string;
+  @IsString()
+  @IsOptional()
+  city?: string;
 
+  @IsString()
+  @IsOptional()
+  relationship?: string;
 }
 
 export class userFavoritesDto {
-
-    @IsString()
-    postId: string;
+  @IsString()
+  postId: string;
 }
