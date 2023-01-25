@@ -13,12 +13,11 @@ export class PostGuard implements CanActivate {
     const param = request.params;
     let data: any;
 
-    if (param.postId) {
+    if (param.id) {
       data = await prisma.post.findFirst({ where: { id: param.postId }, select: { userId: true } });
     } else {
       data = await prisma.comment.findFirst({ where: { id: param.postId }, select: { userId: true } });
     }
-
 
     if (user.id !== data.userId) {
       return false;

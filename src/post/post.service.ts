@@ -1,6 +1,6 @@
-import { PostDto, UpdatePostDto } from './dto/post.dto';
+import { PostDto, RateDto, UpdatePostDto } from './dto/post.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -8,25 +8,20 @@ export class PostService {
   constructor(private prisma: PrismaService) {}
 
   async createPost(userId: string, postData: PostDto) {
-    let ingredients: any[] = [];
-    ingredients = postData.ingredients;
     try {
       const post = await this.prisma.post.create({
         data: {
+          ...postData,
           userId: userId,
-          name: postData.name,
-          desc: postData.desc,
-          ingredients: ingredients as Prisma.JsonArray,
-          readytime: postData.readytime,
-          images: postData.images,
-          category: postData.category,
+          ingredients: postData.ingredients as unknown as Prisma.JsonArray,
           likes: [],
           rating: [],
         },
       });
       return post;
     } catch (error) {
-      return { error: 'error in creating post \n' + error };
+      error.subject = 'error in creating post';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -41,7 +36,8 @@ export class PostService {
       });
       return post;
     } catch (error) {
-      return { error: 'error in updating post \n' + error };
+      error.subject = 'error in updating post';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -50,7 +46,8 @@ export class PostService {
       const post = await this.prisma.post.delete({ where: { id: id } });
       return post;
     } catch (error) {
-      return { error: 'error in deleting post \n' + error };
+      error.subject = 'error in deleting post';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -59,7 +56,8 @@ export class PostService {
       const post = await this.prisma.post.findFirst({ where: { id: id } });
       return post;
     } catch (error) {
-      return { error: 'error in getting post \n' + error };
+      error.subject = 'error in getting post';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -68,50 +66,54 @@ export class PostService {
       const post = await this.prisma.post.findMany({ where: { userId: id } });
       return post;
     } catch (error) {
-      return { error: "error in getting user's post \n" + error };
+      error.subject = "error in getting user's post";
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
 
   async getTimelinePosts(id: string) {
-    const { followings } = await this.prisma.user.findUnique({
-      where: {
-        id: id,
-      },
-      select: {
-        followings: true,
-      },
-    });
+    try {
+      const { followings } = await this.prisma.user.findUnique({
+        where: {
+          id: id,
+        },
+        select: {
+          followings: true,
+        },
+      });
 
-    const posts = await this.prisma.post.findMany({});
-    // eslint-disable-next-line prefer-const
-    let timeline = [];
-    for (const post of posts) {
-      if (followings.includes(post.userId)) {
-        timeline.push(post);
+      const posts = await this.prisma.post.findMany({});
+      // eslint-disable-next-line prefer-const
+      let timeline = [];
+      for (const post of posts) {
+        if (followings.includes(post.userId)) {
+          timeline.push(post);
+        }
       }
+      return timeline;
+    } catch (error) {
+      error.subject = 'error in getting timeline post';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
-    return timeline;
+  }
+
+  async likeStuff(id: string, postId: string) {
+    try {
+      const { likes } = await this.prisma.post.findFirst({
+        where: { id: postId },
+      });
+      if (likes.includes(id)) {
+        return this.dislikePost(id, postId, likes);
+      } else {
+        return this.likePost(id, postId);
+      }
+    } catch (error) {
+      error.subject = "error in getting post's likes";
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
   }
 
   async likePost(id: string, postId: string) {
-    const { likes } = await this.prisma.post.findFirst({
-      where: { id: postId },
-    });
-    if (likes.includes(id)) {
-      try {
-        const post = await this.prisma.post.update({
-          where: {
-            id: postId,
-          },
-          data: {
-            likes: likes.filter((like: string) => like !== id),
-          },
-        });
-        return post.likes;
-      } catch (error) {
-        return { error: 'error in liking back post \n' + error };
-      }
-    }
     try {
       const post = await this.prisma.post.update({
         where: {
@@ -125,35 +127,70 @@ export class PostService {
       });
       return post.likes;
     } catch (error) {
-      return { error: 'error in liking post \n' + error };
+      error.subject = 'error in liking post';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+  }
+
+  async dislikePost(id: string, postId: string, likes: string[]) {
+    try {
+      const post = await this.prisma.post.update({
+        where: {
+          id: postId,
+        },
+        data: {
+          likes: likes.filter((like: string) => like !== id),
+        },
+      });
+      return post.likes;
+    } catch (error) {
+      error.subject = 'error in disliking post';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
 
   async ratePost(userId: string, postId: string, rate: number) {
-    const newRate: any = {
+    const newRate: RateDto = {
       userId: userId,
       rate: rate,
     };
 
-    const { rating } = await this.prisma.post.findUnique({
-      where: { id: postId },
-    });
+    try {
+      const { rating } = await this.prisma.post.findUnique({
+        where: { id: postId },
+        select: { rating: true },
+      });
+      this.removeRate(userId, postId, rating);
+    } catch (error) {
+      error.subject = 'error in getting post rate';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
+    }
+    return this.addRate(postId, newRate);
+  }
 
+  async removeRate(userId: string, postId: string, rating: Prisma.JsonValue[]) {
     rating.forEach(async (rate: any) => {
       for (const key in rate) {
         if (key === 'userId' && rate[key] === userId) {
-          await this.prisma.post.update({
-            where: {
-              id: postId,
-            },
-            data: {
-              rating: rating.filter((rate: any) => rate.userId !== userId),
-            },
-          });
+          try {
+            await this.prisma.post.update({
+              where: {
+                id: postId,
+              },
+              data: {
+                rating: rating.filter((rate: any) => rate.userId !== userId),
+              },
+            });
+          } catch (error) {
+            error.subject = 'error in removing rate post';
+            throw new HttpException(error, HttpStatus.BAD_REQUEST);
+          }
         }
       }
     });
+  }
 
+  async addRate(postId: string, newRate: RateDto) {
     try {
       const post = await this.prisma.post.update({
         where: {
@@ -161,13 +198,14 @@ export class PostService {
         },
         data: {
           rating: {
-            push: newRate,
+            push: newRate as unknown as Prisma.JsonValue,
           },
         },
       });
       return post.rating;
     } catch (error) {
-      return { error: 'error in rating post \n' + error };
+      error.subject = 'error in rating post';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
 
@@ -184,7 +222,8 @@ export class PostService {
       });
       return score / post.rating.length;
     } catch (error) {
-      return { error: 'error in scoring post \n' + error };
+      error.subject = 'error in getting post store';
+      throw new HttpException(error, HttpStatus.BAD_REQUEST);
     }
   }
 }

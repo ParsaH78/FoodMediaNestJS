@@ -41,7 +41,7 @@ model Post {
   images String[] 
   likes String[]
   readytime Int
-  ingredients Json
+  ingredients Json[]
   category String[] 
   vegan String @default("نیست")
   rating Json[]

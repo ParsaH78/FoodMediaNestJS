@@ -1,7 +1,15 @@
 import { CommentService } from './comment.service';
 import { Param } from '@nestjs/common/decorators';
 import { GetUser } from './../auth/decorator/get_user.decorator';
-import { Controller, Post, Delete, Put, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Delete,
+  Put,
+  Body,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { JWTGuard, PostGuard } from 'src/auth/guards';
 
 @UseGuards(JWTGuard)
@@ -11,8 +19,8 @@ export class CommentController {
 
   @Post('/:id')
   commentPost(
-    @GetUser('id') id: string,
-    @Param('id') postId: string,
+    @GetUser('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) postId: string,
     @Body() body: string,
   ) {
     return this.commentService.commentPost(id, postId, body['text']);
@@ -20,15 +28,15 @@ export class CommentController {
 
   @Delete('/:id')
   @UseGuards(PostGuard)
-  deleteComment(@Param('id') commentId: string) {
+  deleteComment(@Param('id', new ParseUUIDPipe()) commentId: string) {
     return this.commentService.deleteComment(commentId);
   }
 
   @Put('/:id')
   @UseGuards(PostGuard)
   editComment(
-    @GetUser('id') id: string,
-    @Param('id') commentId: string,
+    @GetUser('id', new ParseUUIDPipe()) id: string,
+    @Param('id', new ParseUUIDPipe()) commentId: string,
     @Body() body: string,
   ) {
     return this.commentService.editComment(id, body['text'], commentId);

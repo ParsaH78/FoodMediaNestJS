@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
@@ -9,13 +10,22 @@ import {
 } from 'class-validator';
 import { IsString } from 'class-validator';
 
+export class RateDto {
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  rate: number;
+}
+
 export class IngredientsDto {
   @IsString()
   @IsNotEmpty()
   name: string;
 
-  @IsString()
-  @IsNotEmpty()
+c
   amount: string;
 }
 
@@ -29,6 +39,8 @@ export class PostDto {
   explain?: string;
 
   @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
   desc: string[];
 
   @IsNotEmpty()
@@ -39,6 +51,8 @@ export class PostDto {
   ingredients: IngredientsDto[];
 
   @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
   category: string[];
 
   @IsNumber()
@@ -46,6 +60,8 @@ export class PostDto {
   readytime: number;
 
   @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
   images: string[];
 
   @IsString()
